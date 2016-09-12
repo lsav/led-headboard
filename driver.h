@@ -7,23 +7,21 @@ class LEDDriver {
   public:
     void parse(String data);
     void sunrise(int fadeDuration); //fadeDuration in seconds
-    void setRGB(uint16_t r, uint16_t g, uint16_t b, int fadeDuration); //fadeDuration in seconds
+    void setRGB(float targetR, float targetG, float targetB, int fadeDuration); //fadeDuration in seconds
     void partyMode();
     void begin();
-    LEDDriver(int deviceNumber=1, int clock=13, int data=12, uint16_t r=65535, uint16_t g=65535, uint16_t b=65535);
+    LEDDriver(int deviceNumber=1, int clock=13, int data=12, float r=0, float g=0, float b=0);
   private:
-    void stringifyFloats(float r, float g, float b, char* output);
-    uint16_t visibleToAbs(float visible);
-    // current values on linear scale
-    float linR;
-    float linG;
-    float linB;
-    int clock;
-    int data;
-    int deviceNumber;
-    uint16_t pwmMax = 65535;
-    int expBase = 256;
-    //int expBase = 2;
-    const int numChips = 1; // only support single chip
-    Adafruit_TLC59711 pwmChip;
+	float r, g, b;
+	uint16_t rMap();
+	uint16_t gMap();
+	uint16_t bMap();
+	uint16_t visibleToAbs(float visible, int base=256);
+  void rebindColours();
+  int clock;
+  int data;
+  int deviceNumber;
+  uint16_t pwmMax = 65535;
+  const int numChips = 1; // only support single chip
+  Adafruit_TLC59711 pwmChip;
 };

@@ -1,25 +1,55 @@
 #include "driver.h"
-#include "assert.h"
 
 using namespace std;
 
-uint16_t LEDDriver::visibleToAbs(float visible) {
+uint16_t LEDDriver::visibleToAbs(float visible, int base) {
   // convert desired visible brightness to absolute brightness value
-  double power = visible/pwmMax;
-  double multiplier = pwmMax/(expBase-1);
-  uint16_t ret = pwmMax - (uint16_t)(multiplier*(pow(expBase, power) - 1));
-  return ret;
+  return (pwmMax - (uint16_t)(visible));
+  //double power = (visible)/pwmMax;
+  //return (pwmMax - (uint16_t)((pwmMax/(base-1))*(pow(base, power) - 1)));
+}
+//Luma conversion for RGB used in HDTV signal processing
+//Y = 0.2126 R + 0.7152 G + 0.0722 B
+
+uint16_t LEDDriver::rMap() {
+	
+	return visibleToAbs(r, 4);
+}
+
+uint16_t LEDDriver::gMap() {
+	
+	return visibleToAbs(g, 4);
+}
+
+uint16_t LEDDriver::bMap() {
+	
+	return visibleToAbs(b, 4);
+}
+
+//Insure that floating point errors don't accumulate
+void LEDDriver::rebindColours() {
+	
+	if(r < 0)
+		r = 0;
+	if(r > pwmMax)
+		r = pwmMax;
+	if(g < 0)
+		g = 0;
+	if(g > pwmMax)
+		g = pwmMax;
+	if(b < 0)
+		b = 0;
+	if(b > pwmMax)
+		b = pwmMax;
 }
 
 void LEDDriver::parse(String data) {
     //tokenize data into command, data and duration
     //int fade = stoi(data);
     if(data == "on") {
-      Serial.println("On!!");
-      setRGB(0, 0, 0, 2);
+	  setRGB(pwmMax, pwmMax, pwmMax, 2);
     } else if(data == "off") {
-      setRGB(pwmMax, pwmMax, pwmMax, 2);
-      Serial.println("Off!!");
+      setRGB(0, 0, 0, 2);
     } else if(data == "sunrise") {
       sunrise(20);
     }
@@ -37,77 +67,50 @@ void LEDDriver::sunrise(int fadeDuration) {
   int t1 = fadeDuration/5;
   int t2 = 2*t1;
   
-  //setRGB(65535, 61937, 57568, fadeDuration); //warm white eh?
-  
-  setRGB(30000, 35000, 10000, t1); //a red dawn rises
-  setRGB(55000, 45000, 25000, t2); //yellow it out...
-  setRGB(65535, 50000, 35000, t2); // lighten a ton
+  setRGB(65535, 61937, 57568, fadeDuration); //warm white eh?
+  //setRGB(30000, 35000, 10000, t1); //a red dawn rises
+  //setRGB(55000, 45000, 25000, t2); //yellow it out...
+  //setRGB(65535, 50000, 35000, t2); // lighten a ton
   
   }
 
 void LEDDriver::partyMode() {}
 
 
-LEDDriver::LEDDriver(int deviceNumber, int clock, int data, uint16_t r, uint16_t g, uint16_t b) :
-    deviceNumber(deviceNumber), clock(clock), data(data), linR(r), linG(g), linB(b), pwmChip(numChips, clock, data) {}
+LEDDriver::LEDDriver(int deviceNumber, int clock, int data, float r, float g, float b) :
+    deviceNumber(deviceNumber), r(r), g(g), b(b), clock(clock), data(data),
+	pwmChip(numChips, clock, data) {}
 
 void LEDDriver::begin() {
     pwmChip.begin();
     pwmChip.write();
-    pwmChip.setLED(deviceNumber, visibleToAbs(linR), visibleToAbs(linG), visibleToAbs(linB));
+	rebindColours();
+    pwmChip.setLED(deviceNumber, rMap(), gMap(), bMap());
     pwmChip.write();
 }
 
-void LEDDriver::stringifyFloats(float r, float g, float b, char* output) {
+void LEDDriver::setRGB(float targetR, float targetG, float targetB, int fadeDuration) {
 
-	//stringify the floats #arduinoproblems
-    char rStr[20];
-    char gStr[20];
-    char bStr[20];
-    dtostrf(r, 4, 7, rStr);
-    dtostrf(g, 4, 7, gStr);
-    dtostrf(b, 4, 7, bStr);
-    sprintf(output, "R: %s, G: %s, B: %s", rStr, gStr, bStr);
-}
-	
-void LEDDriver::setRGB(uint16_t r, uint16_t g, uint16_t b, int fadeDuration) {
-
-    Serial.println(("Starting setRGB -- R: %u, G: %u, B: %u", r, g, b));
+    //Serial.println("Starting setRGB");
     if(fadeDuration == 0) {
-      linR = r;
-      linG = g;
-      linB = b;
-      pwmChip.setLED(deviceNumber, visibleToAbs(linR), visibleToAbs(linG), visibleToAbs(linB));
-      pwmChip.write();
+		r = targetR;
+		g = targetG;
+		b = targetB;
+		pwmChip.setLED(deviceNumber, rMap(), gMap(), bMap());
+		pwmChip.write();
     } else {
-      long unsigned int millisecs = fadeDuration*1000/6; //hack!  
-      float dR = (r - linR)/millisecs;
-      float dG = (g - linG)/millisecs;
-      float dB = (b - linB)/millisecs;
+      double millisecs = fadeDuration*1000;
+      float dR = (targetR - r)/millisecs;
+      float dG = (targetG - g)/millisecs;
+      float dB = (targetB - b)/millisecs;
   	
   	  //advance along linear scale while setting LEDs according to transform
-      for(int i=0; i < millisecs; i++) {
-          linR += dR;
-          linG += dG;
-          linB += dB;
-          pwmChip.setLED(deviceNumber, visibleToAbs(linR), visibleToAbs(linG), visibleToAbs(linB));
+      for(int i=0; i < millisecs; i++, r+=dR, g+=dG, b+=dB) {
+          pwmChip.setLED(deviceNumber, rMap(), gMap(), bMap());
           pwmChip.write();
           delay(1);
       }
     }
-	    
-  	//counter long term drift in floats
-  	if(linR < 0)
-  		linR = 0;
-  	if(linG < 0)
-  		linG = 0;
-  	if(linB < 0)
-  		linB = 0;
-    if(linR > pwmMax)
-      linR = pwmMax;
-    if(linG > pwmMax)
-      linG = pwmMax;
-    if(linB > pwmMax)
-      linB = pwmMax;
-    Serial.println("Ending setRGB");
+	rebindColours();
+    //Serial.println("Ending setRGB");
 }
