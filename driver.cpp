@@ -1,11 +1,5 @@
 #include "driver.h"
 
-bool isFloat(const char* token) {
-  
-  float f;
-  return(sscanf(token, "%f", &f) != EOF);
-}
-
 uint16_t LEDDriver::visibleToAbs(float visible, int base) {
   // convert desired visible brightness to absolute brightness value
   // visible is given as a float between 0 and 1
@@ -35,49 +29,68 @@ void LEDDriver::rebindColours() {
 		b = 1;
 }
 
-int LEDDriver::parse(String data) {
-    // tokenize data into command, data and duration
-    // run the command
-    // return -1 on error
-    if(data.length() == 0) {
+int LEDDriver::parse(const char* data) {
+  // tokenize data into command, data and duration
+  // run the command
+  // return -1 on error
+  
+  if(data[0] == '/0')
+    return -1;
+  const int MAX_TOKENS = 5;
+  const char SEP = ' ';
+  char input_buffer[256];
+  int i = 0;
+  //prevent overflow from strcpy
+  char ch = '1';
+  while(ch != NULL) {
+    ch = data[i];
+    i++;
+    if(i > 255) {
       return -1;
     }
-
-    // single word commands
-    if(data == "on") {
-      sunrise(1); // go to default warm white quickly
-    } else if(data == "off")  {
-      setRGB(0, 0, 0, 1);
-    } else if(data == "party") {
-      partyMode();
-    } else {
-      // multipart commands - split on whitespace
-      // "set r g b [t]" and "sunrise [t]"
-      String tokens[10];
-      int numTokens = 0;
-      for(int i = 0; i < data.length(); i++) {
-        if(sscanf(data.c_str(), "%s", tokens[i].c_str()) == EOF)
-          return -1;
-        numTokens++;
-      }
-      for(int i=1; i < numTokens; i++) {
-        if(!isFloat(tokens[i].c_str()))
-          return -1;
-      }
-      if((tokens[0] == "set")) {
-        //set
-        if(numTokens == 5) {
-          setRGB(atof(tokens[1].c_str()), atof(tokens[2].c_str()), atof(tokens[3].c_str()), atoi(tokens[4].c_str()));
-        } else if(numTokens == 4) {
-          setRGB(atof(tokens[1].c_str()), atof(tokens[2].c_str()), atof(tokens[3].c_str()), 0);
-        }
-      } else if((numTokens == 2) && (tokens[0] == "sunrise")) {
-          sunrise(atof(tokens[1].c_str()));
-      } else
-        return -1;
+  }
+  char* command;
+  strcpy(input_buffer, data);
+  char* tokens[MAX_TOKENS];
+  int numTokens = 1;
+  tokens[0] = strtok(input_buffer, &SEP);
+  // break data into several smaller strings in place
+  for(int i = 1; i<MAX_TOKENS; i++) {
+    //find the first instance of SEP
+    command = strtok(NULL, &SEP);
+    if(command == NULL) {
+      break;
     }
-    
-    return 0;
+    tokens[i] = command;
+    numTokens++;
+  }
+
+  for(int i=0; i < numTokens; i++) {
+    Serial.println(("Token: %s", tokens[i]));
+  }
+  
+  // branch off on tokens[0]
+  if(strcmp(tokens[0], "on") == 0) {
+    sunrise(1); // go to default warm white quickly
+  } else if(strcmp(tokens[0], "off") == 0){
+    setRGB(0, 0, 0, 1);
+  } else if(strcmp(tokens[0], "party") == 0) {
+    partyMode();
+  } else if(strcmp(tokens[0], "set") == 0) {
+    // set r g b [t]
+    if(numTokens == 5) {
+      setRGB(atof(tokens[1]), atof(tokens[2]), atof(tokens[3]), atof(tokens[4]));
+    } else if(numTokens == 4) {
+      setRGB(atof(tokens[1]), atof(tokens[2]), atof(tokens[3]), 0);
+    } else
+      return -1;
+  } else if((strcmp(tokens[0], "sunrise") == 0) && (numTokens == 2)) {
+    // sunrise t
+    sunrise(atof(tokens[1]));
+  } else {
+    return -1;
+  }
+  return 0;
 }
 
 void LEDDriver::sunrise(float fadeDuration) {
@@ -85,7 +98,7 @@ void LEDDriver::sunrise(float fadeDuration) {
   if(r + g + b != 0) // start from off only
     setRGB(0, 0, 0, 1);
   
-  setRGB(1, .6, .8, fadeDuration); //warm white eh?
+  setRGB(1, .8, .7, fadeDuration); //warm white eh?
   }
 
 void LEDDriver::partyMode() {}
@@ -96,14 +109,6 @@ LEDDriver::LEDDriver(int deviceNumber, int clock, int data, float r, float g, fl
   pwmChip(numChips, clock, data) {
     
     rebindColours();
-    /*
-    for(uint16_t i=0; i<pwmMax; i++) {
-      float vis = i/pwmMax;
-      rMap[i] = visibleToAbs(vis, 16);
-      gMap[i] = visibleToAbs(vis, 16);
-      bMap[i] = visibleToAbs(vis, 16);
-    }
-    */
 }
 
 void LEDDriver::begin() {
@@ -115,38 +120,32 @@ void LEDDriver::begin() {
 
 void LEDDriver::setRGB(float targetR, float targetG, float targetB, float fadeDuration) {
 
-    //targetR = (uint16_t)(pwmMax*targetR);
-    //targetG = (uint16_t)(pwmMax*targetG);
-    //targetB = (uint16_t)(pwmMax*targetB);
     if(fadeDuration == 0) {
-		r = targetR;
-		g = targetG;
-		b = targetB;
-		pwmChip.setLED(deviceNumber, rMap(), gMap(), bMap());
-    //pwmChip.setLED(deviceNumber, rMap[r], gMap[g], bMap[b]);
-		pwmChip.write();
+  		r = targetR;
+  		g = targetG;
+  		b = targetB;
+  		pwmChip.setLED(deviceNumber, rMap(), gMap(), bMap());
+  		pwmChip.write();
     } else {
-      double steps = fadeDuration*1000;
+      double steps = fadeDuration*100;
       float dR = (targetR - r)/steps;
       float dG = (targetG - g)/steps;
       float dB = (targetB - b)/steps;
       
-  	
   	  //advance along linear scale while setting LEDs according to transform
       //SPI writes take about 1.15 ms with simple calculations
       //exponential calculations drive that up substantially to 2.05ms per write
-      //adding a lookup table for the exponential values will not be much worse than simple calcs, if at all
       unsigned long us = micros();
       for(int i=0; i < steps; i++, r+=dR, g+=dG, b+=dB) {
-      //for(int i=0; i < steps; i++) {
         //pwmChip.setLED(deviceNumber, pwmMax*(1-r), pwmMax*(1-g), pwmMax*(1-b));
         pwmChip.setLED(deviceNumber, rMap(), gMap(), bMap());
         //pwmChip.setLED(deviceNumber, 0, 0, 0);
         pwmChip.write();
+        delay(8); //approximates the 10ms period
       }
       unsigned long dus = micros()-us;
       Serial.println("  time to complete " + String((steps), 1) + " steps: " + String((dus/1000000.0), 2) + " s");
-      Serial.println("  per write(): " + String((dus/steps), 1) + " us");
+      Serial.println("  per write(): " + String((dus/steps), 1) + " us"); //should be around 10ms
     }
 	rebindColours();
 }
