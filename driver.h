@@ -8,8 +8,8 @@ class LEDDriver {
     void begin();
     LEDDriver(int deviceNumber=1, int clock=13, int data=12, float r=0, float g=0, float b=0);
     // move the following to private once debugging is complete
-    void sunrise(float fadeDuration); //fadeDuration in seconds
-    void setRGB(float targetR, float targetG, float targetB, float fadeDuration); //fadeDuration in seconds
+    void sunrise(float fadeDuration);  // fadeDuration in seconds
+    void setRGB(float targetR, float targetG, float targetB, float fadeDuration);  // fadeDuration in seconds
     void partyMode();
   private:
   	float r, g, b;
@@ -22,6 +22,6 @@ class LEDDriver {
     int data;
     int deviceNumber;
     const uint16_t pwmMax = 65535;
-    const int numChips = 1; // only support single chip
+    const int numChips = 1;  // only support single chip
     Adafruit_TLC59711 pwmChip;
 };
