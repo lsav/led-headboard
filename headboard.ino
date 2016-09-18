@@ -2,7 +2,7 @@
 #include "driver.h"
 #include <SPI.h>
 
-const int EOL = 46; // period
+const char EOL = ';'
 String readline = "";
 LEDDriver driver = LEDDriver();
 
