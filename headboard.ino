@@ -8,17 +8,12 @@ LEDDriver driver = LEDDriver();
 
 void setup() {
     Serial.begin(9600);
-    Serial.println("Headboard PWM Test");
+    Serial.println("Headboard PWM Test"); // ASM debug
     driver.begin();
 }
 
 void loop() {
 
-/*
-    delay(1000);
-    driver.sunrise(10);
-*/
-///*
     while (Serial.available()) {
         readline = Serial.readStringUntil(EOL);
         if(driver.parse(readline.c_str()) == -1) {
@@ -27,5 +22,5 @@ void loop() {
             Serial.println("GOOD COMMAND YAY");
         }
     }
-//  */
+
 }

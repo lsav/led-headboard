@@ -5,12 +5,11 @@
 // control must be inverted, since hardware is active low "by design"
 // return (uint16_t)(pwmMax*(1-visible));
 uint16_t LEDDriver::visibleToAbs(float visible, int base) {
-  return (pwmMax - (uint16_t)((pwmMax/(base-1))*(pow(base, visible) - 1)));
+    return (pwmMax - (uint16_t)((pwmMax/(base-1))*(pow(base, visible) - 1)));
 }
 
-// this LED string is really really blue for some reason, so adjust blue values downward
-// but give red and green steeper curves
-// anyway, these numbers seem to give the nicest looking transitions
+// this LED string is really really blue for some reason, need to compensate
+// these numbers seem to give the nicest looking transitions
 
 uint16_t LEDDriver::rMap() {return visibleToAbs(r, 10);}
 uint16_t LEDDriver::gMap() {return visibleToAbs(g*.92, 10);}
@@ -18,7 +17,7 @@ uint16_t LEDDriver::bMap() {return visibleToAbs(b*.76, 8);}
 
 // ensure that floating point errors don't accumulate
 void LEDDriver::rebindColours() {
-	if (r < 0)
+    if (r < 0)
 		r = 0;
 	if (r > 1)
 		r = 1;
@@ -94,7 +93,8 @@ int LEDDriver::parse(const char* data) {
     } else if (strcmp(tokens[0], "set") == 0) {
         // set r g b [t]
         if (numTokens == 5) {
-            setRGB(atof(tokens[1]), atof(tokens[2]), atof(tokens[3]), atof(tokens[4]));
+            setRGB(atof(tokens[1]), atof(tokens[2]), atof(tokens[3]),
+                atof(tokens[4]));
         } else if (numTokens == 4) {
             setRGB(atof(tokens[1]), atof(tokens[2]), atof(tokens[3]), 0);
         } else
@@ -112,17 +112,19 @@ int LEDDriver::parse(const char* data) {
 void LEDDriver::sunrise(float fadeDuration) {
 
     if (r + g + b != 0)
-        setRGB(0.3, 0.3, 0.3, 1); // hack
+        setRGB(0.25, 0.25, 0.25, 1); // hack
 
     // enforce some key colour transitions for prettier sunrise
-    setRGB(0.44, 0.4, 0.3, fadeDuration*.35); // orange-ish at the 35% mark
-    setRGB(0.6, 0.45, 0.4, fadeDuration*.35); // faded yellow at the 70% mark
-    setRGB(1, .88, .65, fadeDuration*.3); // final warm white
+    setRGB(0.44, 0.4, 0.3, fadeDuration*0.3); // orange-ish at the 30% mark
+    setRGB(0.6, 0.45, 0.4, fadeDuration*0.3); // faded yellow at the 60% mark
+    setRGB(0.82, 0.7, 0.5, fadeDuration*0.3); // almost there warm white
+    setRGB(1, 0.88, 0.62, fadeDuration*0.1); // final cooler white
 }
 
 void LEDDriver::partyMode() {}
 
-LEDDriver::LEDDriver(int deviceNumber, int clock, int data, float r, float g, float b) :
+LEDDriver::LEDDriver(int deviceNumber, int clock, int data, float r, float g,
+    float b) :
     deviceNumber(deviceNumber), r(r), g(g), b(b), clock(clock), data(data),
     pwmChip(numChips, clock, data) {
 
@@ -136,7 +138,8 @@ void LEDDriver::begin() {
     pwmChip.write();
 }
 
-void LEDDriver::setRGB(float targetR, float targetG, float targetB, float fadeDuration) {
+void LEDDriver::setRGB(float targetR, float targetG, float targetB,
+    float fadeDuration) {
 
     if (fadeDuration == 0) {
         // instant colour change
@@ -163,8 +166,9 @@ void LEDDriver::setRGB(float targetR, float targetG, float targetB, float fadeDu
     
     // time check (for debugging via ASM)
     unsigned long dus = micros()-us;
-    Serial.println("  time to complete " + String((steps), 1) + " steps: " + String((dus/1000000.0), 2) + " s");
-    Serial.println("  per write(): " + String((dus/steps), 1) + " us"); // should be around 10ms
+    Serial.println("  time to complete " + String((steps), 1) +
+        " steps: " + String((dus/1000000.0), 2) + " s");
+    Serial.println("  per write(): " + String((dus/steps), 1) + " us");
   }
   
 	rebindColours();
