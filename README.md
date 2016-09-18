@@ -1,6 +1,6 @@
 # LED sunrise headboard project
 
-Arduino project to control an RGB LED string with Adafruit TLC 59711 PWM driver. Arduino accepts Bluetooth commands via HC-05
+Arduino project to control an RGB LED string with Adafruit TLC 59711 PWM driver. The Arduino accepts Bluetooth commands via HC-05
 module.
 
 Current status: sunrise emulation is functional.
@@ -21,6 +21,9 @@ Go through sunrise routine over t seconds
 Set the LEDs to the provided r, g, b floats between 0 and 1
 
 Optionally fade over t seconds
+
+### rgb;
+Print the current r, g, b values to serial. Useful for debugging via Arduino Serial Monitor
 
 ### party
 Not yet implemented
