@@ -19,6 +19,7 @@ Go through sunrise routine over t seconds
 
 ### set r g b [t];
 Set the LEDs to the provided r, g, b floats between 0 and 1
+
 Optionally fade over t seconds
 
 ### party
