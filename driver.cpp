@@ -111,13 +111,14 @@ int LEDDriver::parse(const char* data) {
 
 void LEDDriver::sunrise(float fadeDuration) {
 
-    if (r + g + b != 0)
-        setRGB(0.25, 0.25, 0.25, 1); // hack
+    // hacks ¯\_(ツ)_/¯
+    setRGB(0.31, 0.31, 0.31, 1);
+    fadeDuration *= 0.75;
 
     // enforce some key colour transitions for prettier sunrise
-    setRGB(0.44, 0.4, 0.3, fadeDuration*0.3); // orange-ish at the 30% mark
-    setRGB(0.6, 0.45, 0.4, fadeDuration*0.3); // faded yellow at the 60% mark
-    setRGB(0.82, 0.7, 0.5, fadeDuration*0.3); // almost there warm white
+    setRGB(0.42, 0.4, 0.3, fadeDuration*0.3); // orange-red at the 30% mark
+    setRGB(0.59, 0.45, 0.4, fadeDuration*0.3); // orange-yellow at the 60% mark
+    setRGB(0.82, 0.6, 0.5, fadeDuration*0.3); // almost there warm white
     setRGB(1, 0.88, 0.62, fadeDuration*0.1); // final cooler white
 }
 
@@ -161,14 +162,16 @@ void LEDDriver::setRGB(float targetR, float targetG, float targetB,
     for (int i=0; i < steps; i++, r+=dR, g+=dG, b+=dB) {
         pwmChip.setLED(deviceNumber, rMap(), gMap(), bMap());
         pwmChip.write();
-        delay(8); // total for 1 cycle ends up being very close to 10 ms
+        delay(8); // total for 1 cycle ends up being a little over 10 ms
     }
     
     // time check (for debugging via ASM)
+    /*
     unsigned long dus = micros()-us;
     Serial.println("  time to complete " + String((steps), 1) +
         " steps: " + String((dus/1000000.0), 2) + " s");
     Serial.println("  per write(): " + String((dus/steps), 1) + " us");
+    */
   }
   
 	rebindColours();
