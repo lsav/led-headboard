@@ -14,12 +14,12 @@ Set LEDs to warm white over 1 second
 ### nox;
 Set LEDs to off over 1 second
 
-## sunrise t;
+### sunrise t;
 Go through sunrise routine over t seconds
 
-## set r g b [t];
+### set r g b [t];
 Set the LEDs to the provided r, g, b floats between 0 and 1
 Optionally fade over t seconds
 
-## party
+### party
 Not yet implemented
