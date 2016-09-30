@@ -1,6 +1,5 @@
-#include <Adafruit_TLC59711.h>
-#include "driver.h"
-#include <SPI.h>
+#include "led-driver.h"
+#include "command.h"
 
 const char EOL = ';';
 String readline = "";
