@@ -16,9 +16,9 @@ void loop() {
   while (Serial.available()) {
     readline = Serial.readStringUntil(EOL);
     if(command.parse(readline.c_str()) == -1) {
-      Serial.println("BAD COMMAND");
+      Serial.println("\nBAD COMMAND");
     } else {
-      Serial.println("GOOD COMMAND YAY");
+      Serial.println("\nGOOD COMMAND YAY");
     }
   }
 }

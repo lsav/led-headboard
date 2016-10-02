@@ -32,7 +32,8 @@ class LEDDriver {
     float r, g, b;
   private:
     void rebindColours();
-    const uint16_t pwmMax = 65535;
+    //const uint16_t pwmMax = 65535;
+    const uint16_t pwmMax = 255; // for 8-bit debug
     // handle transformations to human-eye centric values
     uint16_t rMap();
     uint16_t gMap();

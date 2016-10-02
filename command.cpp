@@ -56,14 +56,16 @@ int Command::parse(const char* data) {
   }
 
   for(int i=0; i < numTokens; i++) {
-    ASM_DEBUG(("Token: %s\n", tokens[i]));
+    ASM_DEBUG("Tokens:\n");
+    ASM_DEBUG(tokens[i]);
+    ASM_DEBUG("\n");
   }
 
   if(strcmp(tokens[0], "lumos") == 0) {
-    ASM_DEBUG("Lumos!\n");
+    ASM_DEBUG("\nLumos!\n");
     fadeRGB(1, .9, .68, 1); // go to default warm white quickly
   } else if (strcmp(tokens[0], "nox") == 0) {
-    ASM_DEBUG("Nox!\n");
+    ASM_DEBUG("\nNox!\n");
     fadeRGB(0, 0, 0, 1);
   } else if(strcmp(tokens[0], "rgb") == 0) {
     ASM_DEBUG("r: ");
@@ -97,9 +99,10 @@ void Command::sunrise(float fadeDuration) {
 
   //FIXME: probably don't need the hacks with hardware v3, investigate
   // hacks ¯\_(ツ)_/¯
-  fadeRGB(0.31, 0.31, 0.31, 1);
-  fadeDuration *= 0.75;
+  //fadeRGB(0.31, 0.31, 0.31, 1);
+  //fadeDuration *= 0.75;
 
+  fadeRGB(0, 0, 0, 1);
   // enforce some key colour transitions for prettier sunrise
   fadeRGB(0.42, 0.4, 0.3, fadeDuration*0.3); // orange-red at the 30% mark
   fadeRGB(0.59, 0.45, 0.4, fadeDuration*0.3); // orange-yellow at the 60% mark
@@ -118,11 +121,13 @@ void Command::fadeRGB(float r, float g, float b, float fadeDuration) {
     float dG = (g - lamp.g)/steps;
     float dB = (b - lamp.b)/steps;
 
-    unsigned long us = micros();
+    //unsigned long us = micros();
     for (int i=0; i < steps; i++, lamp.r+=dR, lamp.g+=dG, lamp.b+=dB) {
       lamp.setRGB();
       delay(8); // total for 1 cycle ends up being a little over 10 ms
     }
+
+    lamp.setRGB(r, g, b);
 
   // time check (for debugging via ASM)
   /*

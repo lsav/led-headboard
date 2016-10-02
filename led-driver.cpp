@@ -75,9 +75,9 @@ void LEDDriver::begin() {
 void LEDDriver::setRGB() {
 
   // FIXME: needs 16 bit implementation
-  analogWrite(pin1A, rMap());
+  analogWrite(pin2, rMap());
   analogWrite(pin1B, gMap());
-  analogWrite(pin2, bMap());
+  analogWrite(pin1A, bMap());
 /*
   OCR1A = rMap();
   OCR1B = gMap();
