@@ -3,23 +3,22 @@
 
 const char EOL = ';';
 String readline = "";
-LEDDriver driver = LEDDriver();
+Command command = Command();
 
 void setup() {
-    Serial.begin(9600);
-    Serial.println("Headboard PWM Test"); // ASM debug
-    driver.begin();
+  Serial.begin(9600);
+  Serial.println("Headboard PWM Test"); // ASM debug
+  command.begin();
 }
 
 void loop() {
 
-    while (Serial.available()) {
-        readline = Serial.readStringUntil(EOL);
-        if(driver.parse(readline.c_str()) == -1) {
-            Serial.println("BAD COMMAND");
-        } else {
-            Serial.println("GOOD COMMAND YAY");
-        }
+  while (Serial.available()) {
+    readline = Serial.readStringUntil(EOL);
+    if(command.parse(readline.c_str()) == -1) {
+      Serial.println("BAD COMMAND");
+    } else {
+      Serial.println("GOOD COMMAND YAY");
     }
-
+  }
 }

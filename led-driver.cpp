@@ -1,7 +1,12 @@
 #include "led-driver.h"
 
+volatile uint8_t channelMSB; // MSB for using TIMER2 in 16-bit PWM
+uint16_t channelValue; // 16 bit value for the TIMER2 controlled channel
+
 LEDDriver::LEDDriver(float r, float g, float b) : r(r), g(g), b(b) {
-    rebindColours();
+  channelMSB = 0;
+  channelValue = 0;
+  rebindColours();
 }
 
 /**
@@ -47,22 +52,21 @@ void LEDDriver::rebindColours() {
   */
 
 void LEDDriver::begin() {
-    rebindColours();
-    pinMode(pin1A, OUTPUT);
-    pinMode(pin1B, OUTPUT);
-    pinMode(pin2, OUTPUT);
-    channelMSB = 0;
+  rebindColours();
+  pinMode(pin1A, OUTPUT);
+  pinMode(pin1B, OUTPUT);
+  pinMode(pin2, OUTPUT);
 
-    // Attach interrupts?
-    /** Interrupt vectors
-      * 8 0x000E TIMER2 COMPA Timer/Counter2 Compare Match A
-      * 10 0x0012 TIMER2 OVF Timer/Counter2 Overflow
+  // Attach interrupts?
+  /** Interrupt vectors
+    * 8 0x000E TIMER2 COMPA Timer/Counter2 Compare Match A
+    * 10 0x0012 TIMER2 OVF Timer/Counter2 Overflow
 
-      * dynamic_attachInterrupt(TIM2_COMPA, channelLow);
-      * dynamic_attachInterrupt(TIM2_OVF, channelHigh);
-      */
+    * dynamic_attachInterrupt(TIM2_COMPA, channelLow);
+    * dynamic_attachInterrupt(TIM2_OVF, channelHigh);
+    */
 
-    setRGB();
+  setRGB();
 }
 
 /**
@@ -70,17 +74,22 @@ void LEDDriver::begin() {
   */
 void LEDDriver::setRGB() {
 
-  //TODO: implementation needed
+  // FIXME: needs 16 bit implementation
+  analogWrite(pin1A, rMap());
+  analogWrite(pin1B, gMap());
+  analogWrite(pin2, bMap());
+/*
   OCR1A = rMap();
   OCR1B = gMap();
   channelValue = bMap();
+  */
 }
 
 /**
   * Store provided colours
   * Configure timer PWM values
   */
-void LEDDriver::setRGB(uint16_t R, uint16_t G, uint16_t B) {
+void LEDDriver::setRGB(float R, float G, float B) {
 
   r = R;
   g = G;

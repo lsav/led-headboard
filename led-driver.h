@@ -1,6 +1,9 @@
 #ifndef HEADBOARD_LEDDRIVER_H
 #define HEADBOARD_LEDDRIVER_H
 
+#include <math.h>
+#include <Arduino.h>
+
 /**
   * Hardware layout, globals for ISR manipulation
   */
@@ -24,7 +27,7 @@ class LEDDriver {
   public:
     LEDDriver(float r=0, float g=0, float b=0);
     void setRGB(); // configure timers for current values
-    void setRGB(uint16_t R, uint16_t G, uint16_t B); // configure timer for three channels
+    void setRGB(float R, float G, float B); // configure timer for three channels
     void begin(); //configure timers
     float r, g, b;
   private:

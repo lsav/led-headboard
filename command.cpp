@@ -1,4 +1,5 @@
 #include "command.h"
+#include <Arduino.h>
 
 #define HEADBOARD_COMMAND_DEBUG
 #ifdef HEADBOARD_COMMAND_DEBUG
@@ -7,9 +8,7 @@
   #define ASM_DEBUG(s)
 #endif
 
-void Command::Command() {
-  lamp();
-}
+Command::Command() : lamp() {}
 
 void Command::begin() {
   lamp.begin();
@@ -68,11 +67,11 @@ int Command::parse(const char* data) {
     fadeRGB(0, 0, 0, 1);
   } else if(strcmp(tokens[0], "rgb") == 0) {
     ASM_DEBUG("r: ");
-    ASM_DEBUG(r);
+    ASM_DEBUG(lamp.r);
     ASM_DEBUG(", g: ");
-    ASM_DEBUG(g);
+    ASM_DEBUG(lamp.g);
     ASM_DEBUG(", b: ");
-    ASM_DEBUG(b);
+    ASM_DEBUG(lamp.b);
     ASM_DEBUG("\n");
   } else if (strcmp(tokens[0], "party") == 0) {
     partyMode();
@@ -134,3 +133,4 @@ void Command::fadeRGB(float r, float g, float b, float fadeDuration) {
   */
 
   }
+}
