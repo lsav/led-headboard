@@ -20,5 +20,6 @@ void loop() {
     } else {
       Serial.println("\nGOOD COMMAND YAY");
     }
+    readline = "";
   }
 }

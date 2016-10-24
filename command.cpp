@@ -63,7 +63,7 @@ int Command::parse(const char* data) {
 
   if(strcmp(tokens[0], "lumos") == 0) {
     ASM_DEBUG("\nLumos!\n");
-    fadeRGB(1, .9, .68, 1); // go to default warm white quickly
+    fadeRGB(1, .8, .4, 1); // go to default warm white quickly
   } else if (strcmp(tokens[0], "nox") == 0) {
     ASM_DEBUG("\nNox!\n");
     fadeRGB(0, 0, 0, 1);
@@ -104,10 +104,10 @@ void Command::sunrise(float fadeDuration) {
 
   fadeRGB(0, 0, 0, 1);
   // enforce some key colour transitions for prettier sunrise
-  fadeRGB(0.42, 0.4, 0.3, fadeDuration*0.3); // orange-red at the 30% mark
-  fadeRGB(0.59, 0.45, 0.4, fadeDuration*0.3); // orange-yellow at the 60% mark
-  fadeRGB(0.82, 0.6, 0.5, fadeDuration*0.3); // almost there warm white
-  fadeRGB(1, 0.88, 0.62, fadeDuration*0.1); // final cooler white
+  fadeRGB(0.3, 0.1, 0, fadeDuration*0.3); // orange-red at the 30% mark
+  fadeRGB(0.55, 0.35, 0.15, fadeDuration*0.3); // orange-yellow at the 60% mark
+  fadeRGB(0.7, 0.5, 0.2, fadeDuration*0.3); // almost there warm white
+  fadeRGB(1, 0.8, 0.4, fadeDuration*0.1); // final cooler white
 }
 
 void Command::partyMode() {}
