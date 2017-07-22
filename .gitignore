@@ -3,3 +3,8 @@
 .clang_complete
 .gcc-flags.json
 .travis.yml
+*.iml
+android/Application/build
+android/Application/.idea/
+android/Application/.gradle
+
