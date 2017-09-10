@@ -1,24 +1,21 @@
-#include "led-driver.h"
 #include "command.h"
 
-const char EOL = ';';
-String readline = "";
-Command command = Command();
+static const char EOL = ';';
+String readline;
+Command command;
 
 void setup() {
   Serial.begin(9600);
-  Serial.println("Headboard PWM Test"); // ASM debug
   command.begin();
+  Serial.println("SunInFace firmware finished loading");
 }
 
 void loop() {
 
-  while (Serial.available()) {
+  if (Serial.available()) {
     readline = Serial.readStringUntil(EOL);
-    if(command.parse(readline.c_str()) == -1) {
-      Serial.println("\nBAD COMMAND");
-    } else {
-      Serial.println("\nGOOD COMMAND YAY");
-    }
+    command.parse(readline.c_str());
   }
+  command.execute();
+  delay(100); //FIXME: for debug only
 }
