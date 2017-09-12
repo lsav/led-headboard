@@ -3,23 +3,22 @@
 
 #include "led-driver.h"
 
-// TODO: this needs tuning
-static const unsigned long LOOP_FREQ_KHZ = 120;
-static const unsigned int ONE_SECOND_MILLIS = 1000;
+ // real-time tuning hax
+static const unsigned int LOOP_FREQ_HZ = 275;
 
 class State {
   public:
     State();
-    State(double r, double g, double b);
-    double r;
-    double g;
-    double b;
+    State(float r, float g, float b);
+    float r;
+    float g;
+    float b;
     State* next = nullptr;
-    double dR;
-    double dG;
-    double dB;
+    float dR;
+    float dG;
+    float dB;
     unsigned long steps;
-    void setTransition(const State& target, unsigned long millisFade);
+    void setTransition(const State& target, float millisFade);
     void nextState();
     bool isComplete();
     void step();
@@ -44,7 +43,7 @@ class Command {
     LEDDriver lamp;
     void on();
     void off();
-    void sunrise(unsigned long fadeMillis);
+    void sunrise(float fadeMillis);
 };
 
 #endif

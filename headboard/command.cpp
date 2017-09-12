@@ -8,7 +8,7 @@
 #endif
 
 State::State() : r(0), g(0), b(0) {}
-State::State(double r, double g, double b) : r(r), g(g), b(b) {}
+State::State(float r, float g, float b) : r(r), g(g), b(b) {}
 
 Command::Command() : lamp(), current(0, 0, 0), lightsOff(0, 0, 0),
   red(0.3, 0.1, 0.0), orange(0.55, 0.35, 0.15), warmWhite(0.7, 0.5, 0.2),
@@ -86,8 +86,11 @@ int Command::parse(const char* data) {
     ASM_DEBUG("\n");
   } else if ((strcmp(tokens[0], "sunrise") == 0) && (numTokens == 2)) {
     // sunrise t
-    ASM_DEBUG("Command: sunrise");
-    sunrise(atol(tokens[1]));
+    ASM_DEBUG("Command: sunrise\n");
+    ASM_DEBUG("t:");
+    ASM_DEBUG(tokens[1]);
+    ASM_DEBUG("\n");
+    sunrise(atof(tokens[1]));
   } else {
     return -1;
   }
@@ -108,33 +111,28 @@ void Command::execute() {
 }
 
 void Command::on() {
-  current.setTransition(coolWhite, ONE_SECOND_MILLIS);
+  current.setTransition(coolWhite, 1000);
   lightsOff.next = &lightsOff;
 }
 
 void Command::off() {
-  current.setTransition(lightsOff, ONE_SECOND_MILLIS);
+  current.setTransition(lightsOff, 500);
 }
 
-void Command::sunrise(unsigned long fadeMillis) {
-
-  ASM_DEBUG("\n");
-  ASM_DEBUG(fadeMillis);
-  ASM_DEBUG((unsigned long) 0.3*fadeMillis);
-  ASM_DEBUG("\n");
-  
-  current.setTransition(red, (unsigned long) 0.3*fadeMillis);
-  red.setTransition(orange, (unsigned long) 0.3*fadeMillis);
-  orange.setTransition(warmWhite, (unsigned long) 0.3*fadeMillis);
-  warmWhite.setTransition(coolWhite, (unsigned long) 0.1*fadeMillis);
+void Command::sunrise(float fadeMillis) {
+  current.setTransition(red, 0.3 * fadeMillis);
+  red.setTransition(orange, 0.3 * fadeMillis);
+  orange.setTransition(warmWhite, 0.3 * fadeMillis);
+  warmWhite.setTransition(coolWhite, 0.1 * fadeMillis);
 }
 
 /**
   * Calculate and set the state transition parameters
   */
-void State::setTransition(const State& target, unsigned long millisFade) {
+void State::setTransition(const State& target, float millisFade) {
   next = &target;
-  steps = max(millisFade * LOOP_FREQ_KHZ, 1);
+  unsigned long timeSteps = (unsigned long)((millisFade * LOOP_FREQ_HZ) / 1000);
+  steps = max(timeSteps, 1);
   dR = (target.r - r) / steps;
   dG = (target.g - g) / steps;
   dB = (target.b - b) / steps;

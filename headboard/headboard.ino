@@ -17,5 +17,4 @@ void loop() {
     command.parse(readline.c_str());
   }
   command.execute();
-  delay(100); //FIXME: for debug only
 }
