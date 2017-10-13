@@ -13,6 +13,8 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * States:
  * initialize to disconnected
@@ -119,6 +121,11 @@ public class MainActivity extends Activity {
     public void onClickNoAlarm(View view) {
         AlarmPicker alarmPicker = new AlarmPicker();
         alarmPicker.clearAlarm(getApplicationContext());
+    }
+
+    // useful for colour calibration testing
+    public void onClickSunrise(View view) {
+        issueCommand(HeadboardCommand.sunrise((int) TimeUnit.SECONDS.toMillis(30)));
     }
 
     private void issueCommand(String command) {

@@ -51,9 +51,19 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:text="Sunrise!"
+        android:id="@+id/buttonSunrise"
+        android:onClick="onClickSunrise"
+        android:layout_below="@+id/buttonNox"
+        android:layout_alignParentEnd="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:text="Clear"
         android:id="@+id/buttonClear"
         android:onClick="onClickClear"
-        android:layout_below="@+id/buttonNox"
+        android:layout_below="@+id/buttonSunrise"
         android:layout_alignParentEnd="true" />
+
 </RelativeLayout>
