@@ -7,12 +7,40 @@
   #define ASM_DEBUG(s)
 #endif
 
-State::State() : r(0), g(0), b(0) {}
-State::State(float r, float g, float b) : r(r), g(g), b(b) {}
+Colour::Colour(float r, float g, float b) : r(r), g(g), b(b) {}
 
-Command::Command() : lamp(), current(0, 0, 0), lightsOff(0, 0, 0),
-  red(0.3, 0.1, 0.0), orange(0.55, 0.35, 0.15), warmWhite(0.7, 0.5, 0.2),
-  coolWhite(1, 0.8, 0.4) {}
+Transition::Transition(const Colour& start, const Colour& target,
+    float millisFade) {
+
+  unsigned long timeSteps = (unsigned long)((millisFade * LOOP_FREQ_HZ) / 1000);
+  steps = max(timeSteps, 1);
+  dR = (target.r - start.r) / steps;
+  dG = (target.g - start.g) / steps;
+  dB = (target.b - start.b) / steps;
+  ASM_DEBUG("Transition with step count: ");
+  ASM_DEBUG(steps);
+  ASM_DEBUG("\n");
+}
+
+bool Transition::isComplete() {
+  return steps == 0;
+}
+
+void Transition::step(Colour& current) {
+  ASM_DEBUG("Stepping with step number: ");
+  ASM_DEBUG(steps);
+  ASM_DEBUG("\n");
+  if (steps != 0) {
+    current.r += dR;
+    current.g += dG;
+    current.b += dB;
+    steps -= 1;
+  }
+}
+
+Command::Command() : lamp(), current(0, 0, 0) {
+  transitions = new queue<Transition>();
+}
 
 void Command::begin() {
   lamp.begin();
@@ -22,14 +50,12 @@ void Command::begin() {
 /**
   * tokenize data into command, data and duration
   * set the state to the new command
-  * return 0 if new command
-  * return -1 if not a command
   */
-int Command::parse(const char* data) {
+void Command::parse(const char* data) {
 
   if (data[0] == '/0') {
     ASM_DEBUG("Received null string\n");
-    return -1;
+    return;
   }
   const int MAX_TOKENS = 2;
   const char SEP = ' ';
@@ -43,7 +69,7 @@ int Command::parse(const char* data) {
     i++;
     if (i > 255) {
       ASM_DEBUG("Error: command too large\n");
-      return -1;
+      return;
     }
   }
 
@@ -92,76 +118,73 @@ int Command::parse(const char* data) {
     ASM_DEBUG("\n");
     sunrise(atof(tokens[1]));
   } else {
-    return -1;
+    return;
   }
-  return 0;
 }
 
 /**
   * Progress with currently executing command
   */
 void Command::execute() {
-  if (current.isComplete()) {
-    current.nextState();
-  } else {
-    current.step();
+
+  if (transitions->empty()) {
+    ASM_DEBUG("no change required\n");
+    return;
+  }
+
+  Transition* t = transitions->front();
+  if (t == NULL) {
+    ASM_DEBUG("Got a null transition!\n");
+  }
+  t->step(current);
+
+  if (t->isComplete()) {
+    transitions->pop();
   }
 
   lamp.setRGB(current.r, current.g, current.b);
+  ASM_DEBUG("Executing current transition - queue size: ");
+  ASM_DEBUG(transitions->size());
+  ASM_DEBUG("\n");
+}
+
+void Command::clearTransitions() {
+  ASM_DEBUG("Clearing queue\n");
+  while (!transitions->empty()) {
+    Transition* t = transitions->front();
+    transitions->pop();
+    delete t;
+    ASM_DEBUG("Clearing queue - current size: ");
+    ASM_DEBUG(transitions->size());
+    ASM_DEBUG("\n");
+  }
+}
+
+void Command::addTransition(const Colour& start, const Colour& target, double millisFade) {
+  ASM_DEBUG("Adding transition with fade length: ");
+  ASM_DEBUG(millisFade);
+  ASM_DEBUG("\n");
+  Transition* t = new Transition(start, target, (float) millisFade);
+  transitions->enqueue(t);
+  ASM_DEBUG("Adding transition - current queue size: ");
+  ASM_DEBUG(transitions->size());
+  ASM_DEBUG("\n");
 }
 
 void Command::on() {
-  current.setTransition(coolWhite, 1000);
-  lightsOff.next = &lightsOff;
+  clearTransitions();
+  addTransition((const Colour&) current, COOL_WHITE, 1000.0);
 }
 
 void Command::off() {
-  current.setTransition(lightsOff, 500);
+  clearTransitions();
+  addTransition((const Colour&) current, LIGHTS_OFF, 500.0);
 }
 
-void Command::sunrise(float fadeMillis) {
-  current.setTransition(red, 0.3 * fadeMillis);
-  red.setTransition(orange, 0.3 * fadeMillis);
-  orange.setTransition(warmWhite, 0.3 * fadeMillis);
-  warmWhite.setTransition(coolWhite, 0.1 * fadeMillis);
-}
-
-/**
-  * Calculate and set the state transition parameters
-  */
-void State::setTransition(const State& target, float millisFade) {
-  next = &target;
-  unsigned long timeSteps = (unsigned long)((millisFade * LOOP_FREQ_HZ) / 1000);
-  steps = max(timeSteps, 1);
-  dR = (target.r - r) / steps;
-  dG = (target.g - g) / steps;
-  dB = (target.b - b) / steps;
-}
-
-/**
-  * Copy target related information from next state
-  */
-void State::nextState() {
-  ASM_DEBUG("next state\n");
-  if (next == nullptr) {
-    return;
-  }
-  steps = next->steps;
-  dR = next->dR;
-  dG = next->dG;
-  dB = next->dB;
-  next = next->next;
-}
-
-bool State::isComplete() {
-  return (steps == 0 || (r == next->r && g == next->g && b == next->b));
-}
-
-void State::step() {
-  r += dR;
-  g += dG;
-  b += dB;
-  steps -= 1;
-  ASM_DEBUG(steps);
-  ASM_DEBUG("\n");
+void Command::sunrise(float millisFade) {
+  clearTransitions();
+  addTransition((const Colour&) current, RED, 0.3 * millisFade);
+  addTransition(RED, ORANGE, 0.3 * millisFade);
+  addTransition(ORANGE, WARM_WHITE, 0.3 * millisFade);
+  addTransition(WARM_WHITE, COOL_WHITE, 0.1 * millisFade);
 }
