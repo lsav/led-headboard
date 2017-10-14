@@ -4,16 +4,11 @@ import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.Dialog;
 import android.app.DialogFragment;
-import android.app.IntentService;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.app.NotificationCompat;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
@@ -48,14 +43,14 @@ public class AlarmPicker extends DialogFragment implements TimePickerDialog.OnTi
         Calendar notificationTime = (Calendar) alarmTime.clone();
 
         // Adjust it back by the sunrise fade duration
-        alarmTime.add(Calendar.SECOND, -HeadboardCommand.DEFAULT_SUNRISE_FADE);
+        alarmTime.add(Calendar.MILLISECOND, -HeadboardCommand.DEFAULT_SUNRISE_FADE_MILLIS);
 
         Toast.makeText(getContext(), String.format("Sunrise will start at: %s", alarmTime.getTime().toString()),
                 Toast.LENGTH_SHORT).show();
 
         if (currentTime.after(alarmTime)) {
             Toast.makeText(getContext(), String.format("Error - alarm must be at least %d minutes later than now",
-                    TimeUnit.SECONDS.toMinutes(HeadboardCommand.DEFAULT_SUNRISE_FADE)), Toast.LENGTH_LONG).show();
+                    TimeUnit.MILLISECONDS.toMinutes(HeadboardCommand.DEFAULT_SUNRISE_FADE_MILLIS)), Toast.LENGTH_LONG).show();
             return;
         }
 
