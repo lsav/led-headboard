@@ -30,12 +30,4 @@ public class HeadboardCommand {
     public static String sunrise(int millisFade) {
         return String.format("sunrise %d;", millisFade);
     }
-
-    public static String setRGB(int r, int g, int b) {
-        return setRGB(r, g, b, DEFAULT_FAST_FADE_MILLIS);
-    }
-
-    public static String setRGB(int r, int g, int b, int millisFade) {
-        return String.format("set %d %d %d %d;", r, g, b, millisFade);
-    }
 }
