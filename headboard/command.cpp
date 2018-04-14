@@ -1,6 +1,6 @@
 #include "command.h"
 
-#define HEADBOARD_COMMAND_DEBUG
+//#define HEADBOARD_COMMAND_DEBUG
 #ifdef HEADBOARD_COMMAND_DEBUG
   #define ASM_DEBUG(s) Serial.print(s)
 #else
@@ -141,6 +141,7 @@ void Command::execute() {
   if (t->isComplete()) {
     transitions->pop();
   }
+  delete t;
 
   lamp.setRGB(current.r, current.g, current.b);
   ASM_DEBUG("Executing current transition - queue size: ");
