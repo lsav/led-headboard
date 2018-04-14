@@ -22,14 +22,11 @@ public class AlarmPicker extends DialogFragment implements TimePickerDialog.OnTi
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        int hour = 6;
-        int minute = 0;
-        return new TimePickerDialog(getActivity(), this, hour, minute, true);
+        return new TimePickerDialog(getActivity(), this, 6, 30, true);
     }
 
     @Override
     public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-
         Calendar currentTime = Calendar.getInstance();
         Calendar alarmTime = Calendar.getInstance();
         alarmTime.set(Calendar.HOUR_OF_DAY, hourOfDay);
@@ -40,6 +37,8 @@ public class AlarmPicker extends DialogFragment implements TimePickerDialog.OnTi
         if (currentTime.after(alarmTime)) {
             alarmTime.add(Calendar.DAY_OF_YEAR, 1);
         }
+
+        // the time to pop up a notification
         Calendar notificationTime = (Calendar) alarmTime.clone();
 
         // Adjust it back by the sunrise fade duration
@@ -58,10 +57,10 @@ public class AlarmPicker extends DialogFragment implements TimePickerDialog.OnTi
         PendingIntent notificationIntent = createNotificationIntent();
 
         AlarmManager am = (AlarmManager) getContext().getSystemService(Activity.ALARM_SERVICE);
-        am.set(AlarmManager.RTC_WAKEUP, alarmTime.getTimeInMillis(),
-                sunriseIntent);
-        am.set(AlarmManager.RTC_WAKEUP, notificationTime.getTimeInMillis(),
-                notificationIntent);
+        am.setRepeating(AlarmManager.RTC_WAKEUP, alarmTime.getTimeInMillis(),
+                AlarmManager.INTERVAL_DAY, sunriseIntent);
+        am.setRepeating(AlarmManager.RTC_WAKEUP, notificationTime.getTimeInMillis(),
+                AlarmManager.INTERVAL_DAY, notificationIntent);
     }
 
     private PendingIntent createSunriseIntent() {
