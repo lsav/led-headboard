@@ -140,8 +140,8 @@ void Command::execute() {
 
   if (t->isComplete()) {
     transitions->pop();
+    delete t;
   }
-  delete t;
 
   lamp.setRGB(current.r, current.g, current.b);
   ASM_DEBUG("Executing current transition - queue size: ");
